@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Bot, Loader2, Plus, Send, Sparkles, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { nexusChat } from "@/lib/ai.functions";
 import { toast } from "sonner";
+import { AiResponse, ThinkingBubble } from "@/components/nexus/ai-response";
 import { GlassPanel, IconTile, PageHeader, SectionTitle } from "@/components/nexus/glass";
 import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
