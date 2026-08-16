@@ -28,7 +28,10 @@ export const Route = createFileRoute("/assistant")({
   component: AssistantPage,
 });
 
-type Message = { id: number; role: "user" | "nexus"; text: string };
+type Message = { id: number; role: "user" | "nexus"; text: string; animate?: boolean };
+
+const MIN_THINKING_MS = 3000;
+
 
 const initialMessages: Message[] = [
   {
