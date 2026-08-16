@@ -121,14 +121,14 @@ function AssistantPage() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <GlassPanel className="flex min-h-[520px] flex-col p-5 sm:p-6">
-          <div className="scroll-slim flex-1 space-y-4 overflow-y-auto pr-1">
+          <div ref={scrollRef} className="scroll-slim flex-1 space-y-4 overflow-y-auto pr-1">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={
                   message.role === "user"
-                    ? "flex flex-row-reverse items-start gap-3"
-                    : "flex items-start gap-3"
+                    ? "nexus-fade-rise flex flex-row-reverse items-start gap-3"
+                    : "nexus-fade-rise flex items-start gap-3"
                 }
               >
                 <IconTile tone={message.role === "user" ? "azure" : "violet"} className="h-9 w-9">
@@ -142,14 +142,28 @@ function AssistantPage() {
                   className={
                     message.role === "user"
                       ? "glass-strong max-w-[85%] rounded-2xl px-4 py-3 text-sm"
-                      : "glass max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                      : "glass max-w-[85%] rounded-2xl px-4 py-3"
                   }
                 >
-                  {message.text}
+                  {message.role === "user" ? (
+                    <span className="whitespace-pre-wrap">{message.text}</span>
+                  ) : (
+                    <AiResponse text={message.text} animate={message.animate} />
+                  )}
                 </div>
               </div>
             ))}
+
+            {pending ? (
+              <div className="nexus-fade-rise flex items-start gap-3">
+                <IconTile tone="violet" className="h-9 w-9">
+                  <Bot className="h-4 w-4" />
+                </IconTile>
+                <ThinkingBubble />
+              </div>
+            ) : null}
           </div>
+
 
           <div className="glass mt-5 rounded-2xl p-3">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
