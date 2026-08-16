@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Bot, Loader2, Plus, Send, Sparkles, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { nexusChat } from "@/lib/ai.functions";
 import { toast } from "sonner";
+import { AiResponse, ThinkingBubble } from "@/components/nexus/ai-response";
 import { GlassPanel, IconTile, PageHeader, SectionTitle } from "@/components/nexus/glass";
 import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
@@ -26,7 +28,10 @@ export const Route = createFileRoute("/assistant")({
   component: AssistantPage,
 });
 
-type Message = { id: number; role: "user" | "nexus"; text: string };
+type Message = { id: number; role: "user" | "nexus"; text: string; animate?: boolean };
+
+const MIN_THINKING_MS = 3000;
+
 
 const initialMessages: Message[] = [
   {
@@ -54,6 +59,12 @@ function AssistantPage() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const chat = useServerFn(nexusChat);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (node) node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+  }, [messages, pending]);
 
   const send = async (text: string) => {
     const prompt = text.trim();
@@ -63,6 +74,7 @@ function AssistantPage() {
     setMessages(next);
     setDraft("");
     setPending(true);
+    const startedAt = Date.now();
     try {
       const result = await chat({
         data: {
@@ -72,13 +84,21 @@ function AssistantPage() {
           })),
         },
       });
-      setMessages((current) => [...current, { id: id + 1, role: "nexus", text: result.text }]);
+      const wait = MIN_THINKING_MS - (Date.now() - startedAt);
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+      setMessages((current) => [
+        ...current,
+        { id: id + 1, role: "nexus", text: result.text, animate: true },
+      ]);
     } catch (error) {
+      const wait = MIN_THINKING_MS - (Date.now() - startedAt);
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
       toast.error(error instanceof Error ? error.message : "Nexus could not answer that");
     } finally {
       setPending(false);
     }
   };
+
 
   return (
     <div className="space-y-6">
@@ -101,14 +121,14 @@ function AssistantPage() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <GlassPanel className="flex min-h-[520px] flex-col p-5 sm:p-6">
-          <div className="scroll-slim flex-1 space-y-4 overflow-y-auto pr-1">
+          <div ref={scrollRef} className="scroll-slim flex-1 space-y-4 overflow-y-auto pr-1">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={
                   message.role === "user"
-                    ? "flex flex-row-reverse items-start gap-3"
-                    : "flex items-start gap-3"
+                    ? "nexus-fade-rise flex flex-row-reverse items-start gap-3"
+                    : "nexus-fade-rise flex items-start gap-3"
                 }
               >
                 <IconTile tone={message.role === "user" ? "azure" : "violet"} className="h-9 w-9">
@@ -122,14 +142,28 @@ function AssistantPage() {
                   className={
                     message.role === "user"
                       ? "glass-strong max-w-[85%] rounded-2xl px-4 py-3 text-sm"
-                      : "glass max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                      : "glass max-w-[85%] rounded-2xl px-4 py-3"
                   }
                 >
-                  {message.text}
+                  {message.role === "user" ? (
+                    <span className="whitespace-pre-wrap">{message.text}</span>
+                  ) : (
+                    <AiResponse text={message.text} animate={message.animate === true} />
+                  )}
                 </div>
               </div>
             ))}
+
+            {pending ? (
+              <div className="nexus-fade-rise flex items-start gap-3">
+                <IconTile tone="violet" className="h-9 w-9">
+                  <Bot className="h-4 w-4" />
+                </IconTile>
+                <ThinkingBubble />
+              </div>
+            ) : null}
           </div>
+
 
           <div className="glass mt-5 rounded-2xl p-3">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
