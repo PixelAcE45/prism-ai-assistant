@@ -59,6 +59,12 @@ function AssistantPage() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const chat = useServerFn(nexusChat);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (node) node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+  }, [messages, pending]);
 
   const send = async (text: string) => {
     const prompt = text.trim();
@@ -68,6 +74,7 @@ function AssistantPage() {
     setMessages(next);
     setDraft("");
     setPending(true);
+    const startedAt = Date.now();
     try {
       const result = await chat({
         data: {
@@ -77,13 +84,21 @@ function AssistantPage() {
           })),
         },
       });
-      setMessages((current) => [...current, { id: id + 1, role: "nexus", text: result.text }]);
+      const wait = MIN_THINKING_MS - (Date.now() - startedAt);
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+      setMessages((current) => [
+        ...current,
+        { id: id + 1, role: "nexus", text: result.text, animate: true },
+      ]);
     } catch (error) {
+      const wait = MIN_THINKING_MS - (Date.now() - startedAt);
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
       toast.error(error instanceof Error ? error.message : "Nexus could not answer that");
     } finally {
       setPending(false);
     }
   };
+
 
   return (
     <div className="space-y-6">
