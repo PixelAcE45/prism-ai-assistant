@@ -679,3 +679,32 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Nexus AI thinking + response reveal ---------- */
+
+@keyframes nexus-thinking-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+.nexus-thinking-dot {
+  animation: nexus-thinking-dot 1.4s var(--ease-standard) infinite;
+}
+
+@keyframes nexus-thinking-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 0.9; transform: scale(1.15); }
+}
+
+.nexus-thinking-pulse {
+  animation: nexus-thinking-pulse 2s var(--ease-standard) infinite;
+}
+
+@keyframes nexus-fade-rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.nexus-fade-rise {
+  animation: nexus-fade-rise var(--dur-3, 320ms) var(--ease-standard) both;
+}
