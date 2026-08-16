@@ -148,7 +148,7 @@ function AssistantPage() {
                   {message.role === "user" ? (
                     <span className="whitespace-pre-wrap">{message.text}</span>
                   ) : (
-                    <AiResponse text={message.text} animate={message.animate} />
+                    <AiResponse text={message.text} animate={message.animate === true} />
                   )}
                 </div>
               </div>
