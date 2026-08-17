@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { Bot, Loader2, Plus, Send, Sparkles, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { nexusChat } from "@/lib/ai.functions";
@@ -37,7 +38,7 @@ const initialMessages: Message[] = [
   {
     id: 1,
     role: "nexus",
-    text: "I'm Nexus. Ask me to draft, summarise, plan or analyse anything and I'll answer live.",
+    text: "I'm Nexus. I can answer questions, manage your tasks and catch you up on your progress — just ask.",
   },
 ];
 
@@ -48,10 +49,10 @@ const threads = [
 ];
 
 const capabilities = [
-  "Summarise this week's meetings",
-  "Draft a client update",
-  "Turn notes into tasks",
-  "Analyse the Q2 report",
+  "Add a task to finish physics tomorrow at 6 PM",
+  "Catch me up on my progress",
+  "What should I focus on?",
+  "Mark the physics task as done",
 ];
 
 function AssistantPage() {
@@ -59,6 +60,7 @@ function AssistantPage() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const chat = useServerFn(nexusChat);
+  const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,6 +88,9 @@ function AssistantPage() {
       });
       const wait = MIN_THINKING_MS - (Date.now() - startedAt);
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+      if (result.mutated) {
+        void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      }
       setMessages((current) => [
         ...current,
         { id: id + 1, role: "nexus", text: result.text, animate: true },
